@@ -45,7 +45,7 @@ func TestAddGetDelete(t *testing.T) {
 
 	// get
 	packParcel, err := store.Get(id)
-	assert.NoError(t, err, "Ошибка при получении посылки")
+	require.NoError(t, err, "Ошибка при получении посылки")
 
 	assert.Equal(t, parcel.Number, packParcel.Number, "Ошибка Number")
 	assert.Equal(t, parcel.Client, packParcel.Client, "Клиенты не совпадают")
@@ -55,12 +55,12 @@ func TestAddGetDelete(t *testing.T) {
 
 	// delete
 	err = store.Delete(id)
-	assert.NoError(t, err, "ERROR DELETE")
+	require.NoError(t, err, "ERROR DELETE")
 
 	// проверка, посылка удалена
 	_, err = store.Get(id)
-	assert.Error(t, err, "Ожидается ошибка при повторном получении посылки.")
-	assert.Equal(t, sql.ErrNoRows, err, "Ожидается ошибка: No Rows!")
+	require.Error(t, err)
+	require.ErrorIs(t, sql.ErrNoRows, err)
 }
 
 // TestSetAddress
@@ -82,11 +82,11 @@ func TestSetAddress(t *testing.T) {
 	// set address
 	newAddress := "new test address"
 	err = store.SetAddress(id, newAddress)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// check
 	updatedParcel, err := store.Get(id)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, newAddress, updatedParcel.Address)
 }
 
@@ -107,11 +107,11 @@ func TestSetStatus(t *testing.T) {
 	// set status
 	newStatus := ParcelStatusSent
 	err = store.SetStatus(id, newStatus)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// check
 	updatedParcel, err := store.Get(id)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, newStatus, updatedParcel.Status)
 }
 
@@ -146,13 +146,14 @@ func TestGetByClient(t *testing.T) {
 
 	// get by client
 	storedParcels, err := store.GetByClient(client)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, storedParcels, 3, "У клиента должно быть 3 посылки")
 
 	// check
 	for _, parcel := range storedParcels {
 		expected, exists := parcelMap[parcel.Number]
-		assert.True(t, exists, "Посылка не найдена в ожидаемых")
+		//Решил тут тоже assert поменять на require так, как если вернется не та посылка, то дальнейшяя проверка поидее бесмысленна
+		require.True(t, exists, "Посылка не найдена в ожидаемых")
 
 		assert.Equal(t, expected, parcel)
 	}
